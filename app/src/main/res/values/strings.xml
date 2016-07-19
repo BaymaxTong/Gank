@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Gank</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="search">搜索</string>
+    <string name="mode_day_night">夜间模式</string>
+    <string name="setting">设置选项</string>
+
+</resources>
