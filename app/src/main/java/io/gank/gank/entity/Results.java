@@ -1,10 +1,12 @@
 package io.gank.gank.entity;
 
+import io.realm.RealmObject;
+
 /**
  * 干货的具体内容数据
  * Created by baymax on 2016/7/6.
  */
-public class Results {
+public class Results extends RealmObject {
     private String _id;
     private String createdAt;
     private String desc;

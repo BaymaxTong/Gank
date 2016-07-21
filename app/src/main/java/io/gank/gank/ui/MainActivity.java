@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void initViewPager() {
-        viewPager.setOffscreenPageLimit(4);
+        viewPager.setOffscreenPageLimit(4);//预先加载页面
         viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {

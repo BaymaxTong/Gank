@@ -7,10 +7,12 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
@@ -24,6 +26,8 @@ import io.gank.gank.subscribers.SubscriberOnNextListener;
 import io.gank.gank.utils.NetWorkUtil;
 import io.gank.gank.utils.SnackBarUtil;
 import io.gank.gank.view.BatteryView;
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -42,6 +46,7 @@ public class GankFragment extends Fragment {
     private SubscriberOnNextListener getDataOnNext;
     private int page = 1;
     private String title;
+    private Realm realm;
 
     public GankFragment() {
     }
@@ -72,16 +77,30 @@ public class GankFragment extends Fragment {
             public void onNext(List<Results> results) {
                 //更新数据
                 adapter.addDatas(results);
+                //缓存数据
+                realm = Realm.getDefaultInstance();
+                for(int i = 0;i < results.size();i++){
+                    RealmResults<Results> res = realm.where(Results.class).equalTo("desc",results.get(i).getDesc())
+                            .findAll();
+                    if (res == null||res.size() == 0) {
+                        realm.beginTransaction();
+                        Results realmRes = realm.copyToRealm(results.get(i));
+                        realm.commitTransaction();
+                    }
+                }
+                realm.close();
             }
         };
         init();
-
         return rootView;
     }
 
     private void init() {
-        //首次请求数据
-        loadData(title, page, true);
+        initView();
+        initNet();
+    }
+
+    private void initView() {
         layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -116,13 +135,87 @@ public class GankFragment extends Fragment {
         });
     }
 
+    private void initNet() {
+        //首次请求数据
+        loadData(title, page, false);
+    }
+
     //进行网络请求
     private void loadData(String type, int page, boolean refresh){
         if(!NetWorkUtil.isNetWorkConnected(getContext())){
-            SnackBarUtil.ShortSnackBar(recyclerView,"请连接网络... ( ＞ω＜)", SnackBarUtil.COLOR_PINK, SnackBarUtil.COLOR_GREEN).show();
+            //加载缓存数据
+            switch (title){
+                case "all":
+                    getAllResult();
+                    break;
+                case "Android":
+                    getTagResult("Android");
+                    break;
+                case "iOS":
+                    getTagResult("iOS");
+                    break;
+                case "前端":
+                    getTagResult("前端");
+                    break;
+                case "拓展资源":
+                    getTagResult("拓展资源");
+                    break;
+                case "休息视频":
+                    getTagResult("休息视频");
+                    break;
+            }
+            SnackBarUtil.ShortSnackBar(recyclerView,"网络飞到外太空啦... ( ＞ω＜)", SnackBarUtil.COLOR_PINK, SnackBarUtil.COLOR_GREEN).show();
         }else{
             HttpMethods.getInstance().getGankData(new ProgressSubscriber(getDataOnNext, getActivity(), recyclerView, battery, refresh), type, page);
         }
+    }
+
+    public void getAllResult(){
+        realm = Realm.getDefaultInstance();
+        List<Results> data = new ArrayList<>();
+        RealmResults<Results> result2 = realm.where(Results.class)
+                .findAll();
+        Log.d("debug",result2.toString());
+        for(int i = 0;i<result2.size();i++){
+            Results item = result2.get(i);
+            Results r = new Results();              //必须把查询到的数据转换一下不然报错。
+            r.set_id(item.get_id());
+            r.setCreatedAt(item.getCreatedAt());
+            r.setDesc(item.getDesc());
+            r.setPublishedAt(item.getPublishedAt());
+            r.setSource(item.getSource());
+            r.setType(item.getType());
+            r.setUrl(item.getUrl());
+            r.setWho(item.getWho());
+            r.setUsed(item.getUsed());
+            data.add(r);
+        }
+        adapter.addDatas(data);
+        realm.close();
+    }
+
+    public void getTagResult(String tag){
+        realm = Realm.getDefaultInstance();
+        List<Results> data = new ArrayList<>();
+        RealmResults<Results> result2 = realm.where(Results.class).equalTo("type",tag)
+                .findAll();
+        Log.d("debug",result2.toString());
+        for(int i = 0;i<result2.size();i++){
+            Results item = result2.get(i);
+            Results r = new Results();              //必须把查询到的数据转换一下不然报错。
+            r.set_id(item.get_id());
+            r.setCreatedAt(item.getCreatedAt());
+            r.setDesc(item.getDesc());
+            r.setPublishedAt(item.getPublishedAt());
+            r.setSource(item.getSource());
+            r.setType(item.getType());
+            r.setUrl(item.getUrl());
+            r.setWho(item.getWho());
+            r.setUsed(item.getUsed());
+            data.add(r);
+        }
+        adapter.addDatas(data);
+        realm.close();
     }
 
 }

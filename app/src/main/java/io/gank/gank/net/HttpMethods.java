@@ -78,11 +78,19 @@ public class HttpMethods {
         Observable observable = gankService.getSearchData(content, type, page)
                 .map(new HttpResultSearch<List<SResults>>());
 
-        toSubscribe(observable, subscriber);
+        toSubscribeSearch(observable, subscriber);
     }
 
     private <T> void toSubscribe(Observable<T> o, Subscriber<T> s){
          o.subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(s);
+    }
+//延时200ms 搜索
+    private <T> void toSubscribeSearch(Observable<T> o, Subscriber<T> s){
+        o.debounce(200, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
                 .unsubscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(s);

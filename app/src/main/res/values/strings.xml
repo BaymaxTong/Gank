@@ -8,4 +8,5 @@
     <string name="mode_day_night">夜间模式</string>
     <string name="setting">设置选项</string>
 
+    <string name="scale_down_show_behavior">io.gank.gank.view.ScaleDownShowBehavior</string>
 </resources>
